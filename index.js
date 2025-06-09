@@ -27,7 +27,13 @@ async function run() {
         const tourPackagesCollection = client.db("MuqaddasDB").collection("tourPackages");
         const bookingsCollection = client.db("MuqaddasDB").collection("bookings");
 
-        // ADD PACKAGE
+        // POSTING AN AD OF TOUR PACKAGE
+        app.post("/tour-packages", async(request, response) => {
+            const newTourPackage = request.body;
+            const result = await tourPackagesCollection.insertOne(newTourPackage);
+
+            response.send(result);
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
