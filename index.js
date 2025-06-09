@@ -35,6 +35,13 @@ async function run() {
             response.send(result);
         });
 
+        // TO GET ALL THE PACKAGES
+        app.get("/tour-packages", async(request, response) => {
+            const result = await tourPackagesCollection.find().toArray();
+
+            response.send(result);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
