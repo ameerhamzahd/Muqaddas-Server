@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 
 app.use(cors());
@@ -28,7 +28,7 @@ async function run() {
         const bookingsCollection = client.db("MuqaddasDB").collection("bookings");
 
         // POSTING AN AD OF TOUR PACKAGE
-        app.post("/packages", async(request, response) => {
+        app.post("/packages", async (request, response) => {
             const newTourPackage = request.body;
             const result = await tourPackagesCollection.insertOne(newTourPackage);
 
@@ -36,16 +36,25 @@ async function run() {
         });
 
         // TO GET ALL THE PACKAGES & ALSO SPECIFIC PACKAGE USING EMAIL
-        app.get("/packages", async(request, response) => {
+        app.get("/packages", async (request, response) => {
             const email = request.query.email;
             const query = {};
-            
-            if(email){
+
+            if (email) {
                 query.guide_email = email;
             }
 
             const result = await tourPackagesCollection.find(query).toArray();
-            
+
+            response.send(result);
+        })
+
+        // TO DELETE PROPERTY DETAILS
+        app.delete("/package/:id", async (request, response) => {
+            const id = request.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await tourPackagesCollection.deleteOne(query);
+
             response.send(result);
         })
 
