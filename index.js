@@ -28,17 +28,24 @@ async function run() {
         const bookingsCollection = client.db("MuqaddasDB").collection("bookings");
 
         // POSTING AN AD OF TOUR PACKAGE
-        app.post("/tour-packages", async(request, response) => {
+        app.post("/packages", async(request, response) => {
             const newTourPackage = request.body;
             const result = await tourPackagesCollection.insertOne(newTourPackage);
 
             response.send(result);
         });
 
-        // TO GET ALL THE PACKAGES
-        app.get("/tour-packages", async(request, response) => {
-            const result = await tourPackagesCollection.find().toArray();
+        // TO GET ALL THE PACKAGES & ALSO SPECIFIC PACKAGE USING EMAIL
+        app.get("/packages", async(request, response) => {
+            const email = request.query.email;
+            const query = {};
+            
+            if(email){
+                query.guide_email = email;
+            }
 
+            const result = await tourPackagesCollection.find(query).toArray();
+            
             response.send(result);
         })
 
