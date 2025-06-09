@@ -49,6 +49,14 @@ async function run() {
             response.send(result);
         })
 
+        app.get("/package/:id", async (request, response) => {
+            const id = request.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await tourPackagesCollection.findOne(query);
+
+            response.send(result);
+        })
+
         // TO DELETE PROPERTY DETAILS
         app.delete("/package/:id", async (request, response) => {
             const id = request.params.id;
