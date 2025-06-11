@@ -35,13 +35,18 @@ async function run() {
             response.send(result);
         });
 
-        // TO GET ALL THE PACKAGES & ALSO SPECIFIC PACKAGE USING EMAIL
+        // TO GET ALL THE PACKAGES && ALSO SPECIFIC PACKAGE USING EMAIL && SEARCH FUNCTIONALITY
         app.get("/packages", async (request, response) => {
             const email = request.query.email;
+            const search = request.query.search;
             const query = {};
 
             if (email) {
                 query.guide_email = email;
+            }
+
+            if(search){
+                query.tour_name = { $regex: search, $options: "i" };
             }
 
             const result = await tourPackagesCollection.find(query).toArray();
@@ -49,15 +54,31 @@ async function run() {
             response.send(result);
         })
 
+        // TO GET SPECIFIC PACKAGE USING ID
         app.get("/package/:id", async (request, response) => {
             const id = request.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await tourPackagesCollection.findOne(query);
 
             response.send(result);
+        });
+
+        // TO UPDATE PACKAGE DETAILS
+        app.put("/package/:id", async (request, response) => {
+            const id = request.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updatedPackage = request.body;
+            const updatedDoc = {
+                $set: updatedPackage
+            }
+
+            const result = await tourPackagesCollection.updateOne(filter, updatedDoc, options);
+            response.send(result);
         })
 
-        // TO DELETE PROPERTY DETAILS
+        // TO DELETE PACKAGE DETAILS
         app.delete("/package/:id", async (request, response) => {
             const id = request.params.id;
             const query = { _id: new ObjectId(id) }
