@@ -45,7 +45,7 @@ async function run() {
                 query.guide_email = email;
             }
 
-            if(search){
+            if (search) {
                 query.tour_name = { $regex: search, $options: "i" };
             }
 
@@ -78,6 +78,25 @@ async function run() {
             response.send(result);
         })
 
+        // SAVING THE COUNTER OF BOOK NOW BUTTON
+        app.patch("/package/:id", async (request, response) => {
+            const id = request.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $inc: { booking_count: 1 }
+            };
+            const options = {
+                returnDocument: "after"
+            };
+            const result = await tourPackagesCollection.findOneAndUpdate(
+                filter,
+                updateDoc,
+                options
+            );
+
+            response.send(result.value);
+        })
+
         // TO DELETE PACKAGE DETAILS
         app.delete("/package/:id", async (request, response) => {
             const id = request.params.id;
@@ -101,7 +120,7 @@ async function run() {
             const query = {};
 
             if (email) {
-                query.guide_email = email;
+                query.buyer_email = email;
             }
 
             const result = await bookingsCollection.find(query).toArray();
