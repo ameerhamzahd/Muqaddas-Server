@@ -95,6 +95,20 @@ async function run() {
             response.send(result);
         });
 
+        // TO GET ALL THE BOOKINGS && ALSO SPECIFIC BOOKINGS USING EMAIL
+        app.get("/bookings", async (request, response) => {
+            const email = request.query.email;
+            const query = {};
+
+            if (email) {
+                query.guide_email = email;
+            }
+
+            const result = await bookingsCollection.find(query).toArray();
+
+            response.send(result);
+        })
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
