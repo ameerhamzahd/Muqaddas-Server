@@ -125,6 +125,36 @@ async function run() {
 
             const result = await bookingsCollection.find(query).toArray();
 
+            for(const booking of result) {
+                const tour_id = booking.tour_id;
+                const tourQuery = { _id: new ObjectId(tour_id) };
+                const tour = await tourPackagesCollection.findOne(tourQuery);
+
+                booking.image = tour.image; 
+                booking.destination = tour.destination; 
+                booking.departure_location = tour.departure_location; 
+                booking.departure_date = tour.departure_date; 
+                booking.guide_name = tour.guide_name; 
+                booking.guide_contact_no = tour.guide_contact_no; 
+            }
+
+            response.send(result);
+        })
+
+        // TO UPDATE BOOKING STATUS
+        app.patch("/booking/:id", async (request, response) => {
+            const id = request.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+
+            const updatedBooking = request.body;
+            const updatedDoc = {
+                $set: {
+                    status: request.body.status
+                }
+            }
+
+            const result = await bookingsCollection.updateOne(filter, updatedDoc, options);
             response.send(result);
         })
 
