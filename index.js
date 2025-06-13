@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         // DATABASE CONNECTION
         const tourPackagesCollection = client.db("MuqaddasDB").collection("tourPackages");
@@ -125,17 +125,17 @@ async function run() {
 
             const result = await bookingsCollection.find(query).toArray();
 
-            for(const booking of result) {
+            for (const booking of result) {
                 const tour_id = booking.tour_id;
                 const tourQuery = { _id: new ObjectId(tour_id) };
                 const tour = await tourPackagesCollection.findOne(tourQuery);
 
-                booking.image = tour.image; 
-                booking.destination = tour.destination; 
-                booking.departure_location = tour.departure_location; 
-                booking.departure_date = tour.departure_date; 
-                booking.guide_name = tour.guide_name; 
-                booking.guide_contact_no = tour.guide_contact_no; 
+                booking.image = tour.image;
+                booking.destination = tour.destination;
+                booking.departure_location = tour.departure_location;
+                booking.departure_date = tour.departure_date;
+                booking.guide_name = tour.guide_name;
+                booking.guide_contact_no = tour.guide_contact_no;
             }
 
             response.send(result);
@@ -150,13 +150,42 @@ async function run() {
             const updatedBooking = request.body;
             const updatedDoc = {
                 $set: {
-                    status: request.body.status
+                    status: updatedBooking.status
                 }
             }
 
             const result = await bookingsCollection.updateOne(filter, updatedDoc, options);
             response.send(result);
         })
+
+        // FOR LIMIT OPERATOR
+        app.get("/close-packages", async (request, response) => {
+            const today = new Date();
+
+            const result = await tourPackagesCollection
+                .aggregate([
+                    {
+                        $addFields: {
+                            departureDate: { $toDate: "$departure_date" }
+                        }
+                    },
+                    {
+                        $match: {
+                            departureDate: { $gte: today }
+                        }
+                    },
+                    {
+                        $sort: { departureDate: 1 }
+                    },
+                    {
+                        $limit: 6
+                    }
+                ])
+                .toArray();
+
+            response.send(result);
+        });
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
