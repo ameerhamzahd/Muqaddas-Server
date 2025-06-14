@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
+
+const admin = require("firebase-admin");
+const serviceAccount = require("./safar-e-muqaddas-jwt-token.json");
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 
@@ -18,6 +22,39 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const verifyToken = async (request, response, next) => {
+    const authHeader = request.headers?.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return response.status(401).send({ message: 'Unauthorized Access' })
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = await admin.auth().verifyIdToken(token);
+        console.log(decoded)
+        request.decoded = decoded;
+        next();
+    }
+    catch (error) {
+        return response.status(401).send({ message: 'Unauthorized Access' })
+    }
+}
+
+const verifyTokenByEmail = async (request, response, next) => {
+    if (request.query.email !== request.decoded.email) {
+        return response.status(403).send({ message: 'Forbidden Access' })
+    }
+
+    next();
+}
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -41,12 +78,30 @@ async function run() {
             const search = request.query.search;
             const query = {};
 
-            if (email) {
-                query.guide_email = email;
-            }
-
             if (search) {
                 query.tour_name = { $regex: search, $options: "i" };
+            }
+
+            if (email) {
+                const authHeader = request.headers?.authorization;
+
+                if (!authHeader || !authHeader.startsWith("Bearer ")) {
+                    return response.status(401).send({ message: "Unauthorized Access" });
+                }
+
+                const token = authHeader.split(" ")[1];
+
+                try {
+                    const decoded = await admin.auth().verifyIdToken(token);
+                    request.decoded = decoded;
+                }
+                catch {
+                    return response.status(401).send({ message: "Unauthorized Access" })
+                }
+            }
+
+            if (email) {
+                query.guide_email = email;
             }
 
             const result = await tourPackagesCollection.find(query).toArray();
@@ -115,7 +170,7 @@ async function run() {
         });
 
         // TO GET ALL THE BOOKINGS && ALSO SPECIFIC BOOKINGS USING EMAIL
-        app.get("/bookings", async (request, response) => {
+        app.get("/bookings", verifyToken, verifyTokenByEmail, async (request, response) => {
             const email = request.query.email;
             const query = {};
 
@@ -136,6 +191,7 @@ async function run() {
                 booking.departure_date = tour.departure_date;
                 booking.guide_name = tour.guide_name;
                 booking.guide_contact_no = tour.guide_contact_no;
+                booking.guide_email = tour.guide_email;
             }
 
             response.send(result);
