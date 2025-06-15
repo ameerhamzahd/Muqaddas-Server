@@ -4,7 +4,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const admin = require("firebase-admin");
-const serviceAccount = require("./safar-e-muqaddas-jwt-token.json");
+
+const decoded = Buffer.from(process.env.TOKEN_KEY, 'base64').toString('utf8');
+const serviceAccount = JSON.parse(decoded);
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
