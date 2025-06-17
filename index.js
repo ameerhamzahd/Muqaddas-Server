@@ -67,7 +67,7 @@ async function run() {
         const bookingsCollection = client.db("MuqaddasDB").collection("bookings");
 
         // POSTING AN AD OF PACKAGE
-        app.post("/packages", async (request, response) => {
+        app.post("/packages", verifyToken, async (request, response) => {
             const newTourPackage = request.body;
             const result = await tourPackagesCollection.insertOne(newTourPackage);
 
@@ -121,7 +121,7 @@ async function run() {
         });
 
         // TO UPDATE PACKAGE DETAILS
-        app.put("/package/:id", async (request, response) => {
+        app.put("/package/:id", verifyToken, async (request, response) => {
             const id = request.params.id;
             const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
@@ -155,7 +155,7 @@ async function run() {
         })
 
         // TO DELETE PACKAGE DETAILS
-        app.delete("/package/:id", async (request, response) => {
+        app.delete("/package/:id", verifyToken, async (request, response) => {
             const id = request.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await tourPackagesCollection.deleteOne(query);
